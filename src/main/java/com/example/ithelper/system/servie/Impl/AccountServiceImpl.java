@@ -1,15 +1,18 @@
 package com.example.ithelper.system.servie.Impl;
 
+import com.example.ithelper.common.handler.CommonException;
 import com.example.ithelper.common.jwt.JWTUtil;
 import com.example.ithelper.common.response.CommonErrorMsg;
 import com.example.ithelper.common.response.CommonResponse;
 import com.example.ithelper.system.dao.AccountDataRepository;
 import com.example.ithelper.system.dao.AccountRepository;
 import com.example.ithelper.system.entity.Account;
+import com.example.ithelper.system.entity.User;
 import com.example.ithelper.system.entity.vo.AccountDetailVo;
 import com.example.ithelper.system.entity.vo.AccountVo;
 import com.example.ithelper.system.servie.AccountService;
 import com.example.ithelper.system.servie.DeptService;
+import com.example.ithelper.system.servie.UserService;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.shiro.SecurityUtils;
 import org.springframework.beans.BeanUtils;
@@ -35,6 +38,11 @@ public class AccountServiceImpl implements AccountService {
     @Autowired
     DeptService deptService;
 
+    @Autowired
+    UserService userService;
+
+
+
     @Override
     public Account getAccountById(long id) {
 
@@ -48,12 +56,19 @@ public class AccountServiceImpl implements AccountService {
     @Override
     public HashMap getAccounts(Map map) {
 
+        String currentUser = JWTUtil.getUsername(SecurityUtils.getSubject().getPrincipal().toString());
+        String dept="";
+
+        try {
+            User user = userService.getUserByUsername(currentUser);
+            dept = user.getDept().getDeptName();
+        } catch (CommonException e) {
+            e.printStackTrace();
+        }
+
         String searchContent = map.get("searchContent").toString();
 
         String keyWord = map.get("keyWord").toString();
-        //if (keyWord.length() == 0) {
-        //    keyWord = "all";
-        //}
 
         int rowPerPage = (int) map.get("rowsPerPage");
 
@@ -71,11 +86,15 @@ public class AccountServiceImpl implements AccountService {
 
         Pageable pageable = PageRequest.of(page - 1, rowPerPage, sort);
 
+        if (SecurityUtils.getSubject().hasRole("管理员") && keyWord.isEmpty()) {
+            keyWord = "all";
+        }
+
         switch (keyWord) {
-            //case "all":
-            //    rowsNumber = accountRepository.findAll().size();
-            //    accountList = accountRepository.findAll(pageable).getContent();
-            //    break;
+            case "all":
+                rowsNumber = accountRepository.findAll().size();
+                accountList = accountRepository.findAll(pageable).getContent();
+                break;
             case "name":
                 rowsNumber = accountRepository.findAllByNameContains(searchContent).size();
                 accountList = accountRepository.findAllByNameContains(searchContent, pageable);
@@ -108,14 +127,22 @@ public class AccountServiceImpl implements AccountService {
                 }
                 break;
             default:
-                rowsNumber = accountRepository.findAll().size();
-                accountList = accountRepository.findAll(pageable).getContent();
+                rowsNumber = accountRepository.findAllByDept(dept).size();
+                accountList = accountRepository.findAllByDept(dept,pageable);
+
         }
-        System.out.println(rowsNumber);
-        hashMap.put("rowsNumber", rowsNumber);
-        hashMap.put("page", page);
-        hashMap.put("rowsPerPage", rowPerPage);
-        hashMap.put("data", entityToVo(accountList));
+
+        if (Objects.isNull(accountList)){
+            hashMap.put("rowsNumber", 0);
+            hashMap.put("page",1);
+            hashMap.put("rowsPerPage", 1);
+            hashMap.put("data", new ArrayList<>());
+        } else {
+            hashMap.put("rowsNumber", rowsNumber);
+            hashMap.put("page", page);
+            hashMap.put("rowsPerPage", rowPerPage);
+            hashMap.put("data", entityToVo(accountList));
+        }
 
         return hashMap;
     }
@@ -139,6 +166,8 @@ public class AccountServiceImpl implements AccountService {
         Account account = new Account();
         if (method.equals("edit")) {
             account = accountRepository.getOne(Long.valueOf(map.get("id").toString()));
+        } else {
+            account.setCreatedBy(currentUser);
         }
 
         account.setName(map.get("name").toString());
@@ -151,7 +180,7 @@ public class AccountServiceImpl implements AccountService {
         account.setSystem2(map.get("system2").toString());
         account.setSystem3(map.get("system3").toString());
         account.setStatus("暂存");
-        account.setCreatedBy(currentUser);
+
         account.setUpdatedBy(currentUser);
         account.setOtherPerm(map.get("otherPerm").toString());
         account.setGroup(map.get("group").toString());
@@ -192,7 +221,6 @@ public class AccountServiceImpl implements AccountService {
 
         Account account = accountRepository.getOne(id);
         String currentUser = JWTUtil.getUsername(SecurityUtils.getSubject().getPrincipal().toString());
-        System.out.println(currentUser);
 
         if (account == null) {
             return new CommonResponse().code(CommonErrorMsg.Application_Not_Exist.getErrCode())
@@ -204,6 +232,7 @@ public class AccountServiceImpl implements AccountService {
                 if (SecurityUtils.getSubject().hasRole("管理员")) {
                     if (account.getStatus().equals("已提交")) {
                         account.setStatus(status);
+                        account.setUpdatedBy(currentUser);
                     } else {
                         return new CommonResponse().code(CommonErrorMsg.Application_No_Submit.getErrCode())
                                 .message(CommonErrorMsg.Application_No_Submit.getErrMsg());
@@ -216,6 +245,7 @@ public class AccountServiceImpl implements AccountService {
             case "作废":
                 if (account.getStatus().equals("暂存")) {
                     account.setStatus(status);
+                    account.setUpdatedBy(currentUser);
                 } else {
                     return new CommonResponse().code(CommonErrorMsg.Applicetion_Cannot_Invalid.getErrCode())
                             .message(CommonErrorMsg.Applicetion_Cannot_Invalid.getErrMsg());
@@ -224,6 +254,7 @@ public class AccountServiceImpl implements AccountService {
         }
 
         account.setStatus(status);
+        account.setUpdatedBy(currentUser);
         accountRepository.save(account);
         return new CommonResponse("ok");
     }
