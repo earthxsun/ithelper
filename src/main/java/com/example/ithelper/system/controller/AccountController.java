@@ -5,8 +5,10 @@ import com.example.ithelper.common.jwt.JWTUtil;
 import com.example.ithelper.common.response.CommonErrorMsg;
 import com.example.ithelper.common.response.CommonResponse;
 import com.example.ithelper.system.entity.Account;
+import com.example.ithelper.system.entity.Dept;
 import com.example.ithelper.system.servie.AccountDataService;
 import com.example.ithelper.system.servie.AccountService;
+import com.example.ithelper.system.servie.DeptService;
 import com.example.ithelper.system.servie.UserService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import net.sf.jasperreports.engine.JasperRunManager;
@@ -23,10 +25,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @RestController
 @RequestMapping("/account")
@@ -40,6 +39,9 @@ public class AccountController {
 
     @Autowired
     UserService userService;
+
+    @Autowired
+    DeptService deptService;
 
     @RequestMapping("test")
     public String test() {
@@ -64,7 +66,15 @@ public class AccountController {
     public CommonResponse getDept() throws CommonException {
         String currentUser = JWTUtil.getUsername(SecurityUtils.getSubject().getPrincipal().toString());
         String dept = userService.getUserByUsername(currentUser).getDept().getDeptName();
-        ArrayList<String> arrayList = new ArrayList<>();
+        List<String> arrayList = new ArrayList<>();
+        if (currentUser.equals("admin")){
+            List<Dept> allDepts = deptService.getAllDepts();
+            for (Dept d:allDepts) {
+                arrayList.add(d.getDeptName());
+            }
+            return new CommonResponse(arrayList);
+        }
+
         if (dept.equals("关务中心") || dept.equals("关务综合") || dept.equals("东诚报关部")) {
             arrayList.add("关务中心");
             arrayList.add("关务综合");
