@@ -1,8 +1,10 @@
 package com.example.ithelper.system.controller;
 
+import com.example.ithelper.common.aop.OperationLog;
+import com.example.ithelper.common.handler.CommonException;
 import com.example.ithelper.common.response.CommonResponse;
+import com.example.ithelper.common.utils.UserTools;
 import com.example.ithelper.system.dao.AccountRepository;
-import com.example.ithelper.system.entity.Account;
 import com.example.ithelper.system.entity.vo.UserVo;
 import com.example.ithelper.system.servie.RoleService;
 import com.example.ithelper.system.servie.UserService;
@@ -11,16 +13,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/test")
@@ -71,21 +71,10 @@ public class TestController {
         return "ok";
     }
 
-    @GetMapping("gettest")
-    public CommonResponse test(){
-        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
-        try {
-            long id = 1;
-            Date date1 = simpleDateFormat.parse("2019/09/24 00:00:00");
-            Date date2 = simpleDateFormat.parse("2019/09/24 23:59:59");
-            //System.out.println(date);
-            List<Account> accounts = accountRepository.findAllByCreateTimeBetween(date1,date2);
-            //List<Account> accounts = accountRepository.findAllByCreateTimeContains("2019-09-24-");
-            System.out.println(accounts);
-        } catch (ParseException e) {
-            e.printStackTrace();
-        }
-
+    @OperationLog(value = "测试AOP")
+    @RequestMapping("gettest")
+    public CommonResponse test(@RequestBody Map<String,String> map) throws CommonException {
+        System.out.println(UserTools.getCurrentUser());
         return new CommonResponse("ok");
     }
 

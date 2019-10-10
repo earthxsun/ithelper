@@ -1,5 +1,6 @@
 package com.example.ithelper.system.controller;
 
+import com.example.ithelper.common.aop.OperationLog;
 import com.example.ithelper.common.handler.CommonException;
 import com.example.ithelper.common.jwt.JWTUtil;
 import com.example.ithelper.common.response.CommonErrorMsg;
@@ -25,7 +26,10 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/account")
@@ -87,6 +91,7 @@ public class AccountController {
 
     //保存申请表数据
     @PostMapping
+    @OperationLog("保存申请表")
     public CommonResponse saveData(@RequestBody Map map) {
         System.out.println(map.get("formData").toString());
         String method = map.get("method").toString();
@@ -103,6 +108,7 @@ public class AccountController {
 
     //更新申请表状态
     @GetMapping("updateStatus")
+    @OperationLog("修改申请表状态")
     public CommonResponse updateStatus(long id, String status) {
 
         return accountService.updateStatus(id, status);

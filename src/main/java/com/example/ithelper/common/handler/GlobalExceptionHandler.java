@@ -30,7 +30,6 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(UnauthorizedException.class)
     public  CommonResponse handleAuthenticationException(UnauthorizedException ce){
         System.out.println("catch error:  UnauthorizedException");
-        System.out.println(ce);
         return new CommonResponse().message(ce.getMessage());
     }
 

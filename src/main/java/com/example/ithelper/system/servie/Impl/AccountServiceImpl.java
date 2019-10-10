@@ -4,6 +4,7 @@ import com.example.ithelper.common.handler.CommonException;
 import com.example.ithelper.common.jwt.JWTUtil;
 import com.example.ithelper.common.response.CommonErrorMsg;
 import com.example.ithelper.common.response.CommonResponse;
+import com.example.ithelper.common.utils.UserTools;
 import com.example.ithelper.system.dao.AccountDataRepository;
 import com.example.ithelper.system.dao.AccountRepository;
 import com.example.ithelper.system.entity.Account;
@@ -162,7 +163,12 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     public Account saveData(Map map, String method) {
-        String currentUser = JWTUtil.getUsername(SecurityUtils.getSubject().getPrincipal().toString());
+        String currentUser = "";
+        try {
+            currentUser = UserTools.getCurrentUser();
+        } catch (CommonException e) {
+            e.printStackTrace();
+        }
         Account account = new Account();
         if (method.equals("edit")) {
             account = accountRepository.getOne(Long.valueOf(map.get("id").toString()));
