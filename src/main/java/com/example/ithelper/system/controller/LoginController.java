@@ -5,6 +5,8 @@ import com.example.ithelper.common.jwt.JWTUtil;
 import com.example.ithelper.common.response.CommonErrorMsg;
 import com.example.ithelper.common.response.CommonResponse;
 import com.example.ithelper.common.utils.UserTools;
+import com.example.ithelper.system.dao.AccountDataRepository;
+import com.example.ithelper.system.entity.AccountData;
 import com.example.ithelper.system.entity.Menu;
 import com.example.ithelper.system.entity.Role;
 import com.example.ithelper.system.entity.User;
@@ -25,6 +27,9 @@ public class LoginController {
 
     @Autowired
     StringRedisTemplate stringRedisTemplate;
+
+    @Autowired
+    AccountDataRepository accountDataRepository;
 
     @GetMapping
     public CommonResponse login() {
@@ -75,6 +80,18 @@ public class LoginController {
         userInfo.put("token", token);
         userInfo.put("exp_time", date);
         userInfo.put("lastLoginTime",lastLoginTime);
+        if (user.getDept().getDeptName().contains("关务")){
+            List<AccountData> orgList = accountDataRepository.findAllByName("组织");
+            userInfo.put("org",UserTools.getUserOrg(orgList.get(0).getContent()));
+        } else {
+            HashMap<String,Object> map1 = new HashMap<>();
+            map1.put("label",user.getDept().getDeptName());
+            map1.put("value",user.getDept().getDeptName());
+            ArrayList<Map> list = new ArrayList<Map>();
+            list.add(map1);
+            userInfo.put("org",list);
+        }
+
         return new CommonResponse().message(CommonErrorMsg.SUCCESS.getErrMsg())
                 .data(userInfo)
                 .code(CommonErrorMsg.SUCCESS.getErrCode());

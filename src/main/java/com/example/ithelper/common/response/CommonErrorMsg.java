@@ -21,7 +21,7 @@ public enum  CommonErrorMsg {
     Applicetion_Cannot_Invalid(20004,"申请表不能作废，请先改为暂存"),
 
     //30000开头为主机软件信息相关错误定义
-    SOFTWARE_INFO_NOT_EXIST(30001,"软件信息不存在"),
+    AccountName_NOT_EXIST(30001,"账号名不存在"),
 
     //40000开头为用户信息相关错误定义
     PASSWORD_NOT_MATCH(40001,"输入的密码不一致"),

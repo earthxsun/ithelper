@@ -3,8 +3,9 @@ package com.example.ithelper.system.controller;
 import com.example.ithelper.common.aop.OperationLog;
 import com.example.ithelper.common.handler.CommonException;
 import com.example.ithelper.common.response.CommonResponse;
-import com.example.ithelper.common.utils.UserTools;
+import com.example.ithelper.system.dao.AccountDataRepository;
 import com.example.ithelper.system.dao.AccountRepository;
+import com.example.ithelper.system.entity.Account;
 import com.example.ithelper.system.entity.vo.UserVo;
 import com.example.ithelper.system.servie.RoleService;
 import com.example.ithelper.system.servie.UserService;
@@ -13,14 +14,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 
 @RestController
 @RequestMapping("/test")
@@ -40,6 +41,9 @@ public class TestController {
 
     @Autowired
     AccountRepository accountRepository;
+
+    @Autowired
+    AccountDataRepository accountDataRepository;
 
 
     @GetMapping("save")
@@ -73,8 +77,13 @@ public class TestController {
 
     @OperationLog(value = "测试AOP")
     @RequestMapping("gettest")
-    public CommonResponse test(@RequestBody Map<String,String> map) throws CommonException {
-        System.out.println(UserTools.getCurrentUser());
+    public CommonResponse test() throws CommonException {
+        List<String> depts = new ArrayList<>();
+        depts.add("关务中心");
+        depts.add("关务综合");
+        depts.add("东诚报关部");
+        List<Account> list = accountRepository.findAllByDeptIn(depts);
+        System.out.println(list);
         return new CommonResponse("ok");
     }
 

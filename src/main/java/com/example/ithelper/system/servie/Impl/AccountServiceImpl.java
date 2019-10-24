@@ -5,9 +5,9 @@ import com.example.ithelper.common.jwt.JWTUtil;
 import com.example.ithelper.common.response.CommonErrorMsg;
 import com.example.ithelper.common.response.CommonResponse;
 import com.example.ithelper.common.utils.UserTools;
-import com.example.ithelper.system.dao.AccountDataRepository;
-import com.example.ithelper.system.dao.AccountRepository;
+import com.example.ithelper.system.dao.*;
 import com.example.ithelper.system.entity.Account;
+import com.example.ithelper.system.entity.AccountPermissionInfo;
 import com.example.ithelper.system.entity.User;
 import com.example.ithelper.system.entity.vo.AccountDetailVo;
 import com.example.ithelper.system.entity.vo.AccountVo;
@@ -42,6 +42,14 @@ public class AccountServiceImpl implements AccountService {
     @Autowired
     UserService userService;
 
+    @Autowired
+    SystemsRepository systemsRepository;
+
+    @Autowired
+    SystemsPermissionRepository systemsPermissionRepository;
+
+    @Autowired
+    AccountPermissionInfoRepository accountPermissionInfoRepository;
 
 
     @Override
@@ -58,11 +66,18 @@ public class AccountServiceImpl implements AccountService {
     public HashMap getAccounts(Map map) {
 
         String currentUser = JWTUtil.getUsername(SecurityUtils.getSubject().getPrincipal().toString());
-        String dept="";
-
+        String dept = "";
+        List<String> depts = new ArrayList<>();
         try {
             User user = userService.getUserByUsername(currentUser);
             dept = user.getDept().getDeptName();
+            if(dept.contains("关务")) {
+                depts.add("关务中心");
+                depts.add("关务综合");
+                depts.add("东诚报关部");
+            } else {
+                depts.add(dept);
+            }
         } catch (CommonException e) {
             e.printStackTrace();
         }
@@ -97,8 +112,10 @@ public class AccountServiceImpl implements AccountService {
                 accountList = accountRepository.findAll(pageable).getContent();
                 break;
             case "name":
-                rowsNumber = accountRepository.findAllByNameContains(searchContent).size();
-                accountList = accountRepository.findAllByNameContains(searchContent, pageable);
+                //rowsNumber = accountRepository.findAllByNameContains(searchContent).size();
+                //accountList = accountRepository.findAllByNameContains(searchContent, pageable);
+                rowsNumber = accountRepository.findAllByDeptInAndNameContains(depts,searchContent).size();
+                accountList = accountRepository.findAllByDeptInAndNameContains(depts,searchContent, pageable);
                 break;
             case "type":
                 rowsNumber = accountRepository.findAllByApplicationType(searchContent).size();
@@ -121,21 +138,22 @@ public class AccountServiceImpl implements AccountService {
                 try {
                     Date sDate = simpleDateFormat.parse(startDate);
                     Date eDate = simpleDateFormat.parse(endDate);
-                    rowsNumber = accountRepository.findAllByCreateTimeBetween(sDate,eDate).size();
-                    accountList = accountRepository.findAllByCreateTimeBetween(sDate,eDate,pageable);
-                } catch ( ParseException e) {
+                    rowsNumber = accountRepository.findAllByCreateTimeBetween(sDate, eDate).size();
+                    accountList = accountRepository.findAllByCreateTimeBetween(sDate, eDate, pageable);
+                } catch (ParseException e) {
                     e.printStackTrace();
                 }
                 break;
             default:
-                rowsNumber = accountRepository.findAllByDept(dept).size();
-                accountList = accountRepository.findAllByDept(dept,pageable);
-
+                //rowsNumber = accountRepository.findAllByDept(dept).size();
+                //accountList = accountRepository.findAllByDept(dept, pageable);
+                rowsNumber = accountRepository.findAllByDeptIn(depts).size();
+                accountList = accountRepository.findAllByDeptIn(depts, pageable);
         }
 
-        if (Objects.isNull(accountList)){
+        if (Objects.isNull(accountList)) {
             hashMap.put("rowsNumber", 0);
-            hashMap.put("page",1);
+            hashMap.put("page", 1);
             hashMap.put("rowsPerPage", 1);
             hashMap.put("data", new ArrayList<>());
         } else {
@@ -162,7 +180,8 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
-    public Account saveData(Map map, String method) {
+    public Account saveData(Map map, String method) throws Exception {
+
         String currentUser = "";
         try {
             currentUser = UserTools.getCurrentUser();
@@ -170,35 +189,44 @@ public class AccountServiceImpl implements AccountService {
             e.printStackTrace();
         }
         Account account = new Account();
+        List list = (List) map.get("requiredSystemPermissions");
+        HashSet<AccountPermissionInfo> infoHashSet = new HashSet<>();
+        int i = 1;
         if (method.equals("edit")) {
             account = accountRepository.getOne(Long.valueOf(map.get("id").toString()));
+            for (Object obj : list) {
+                Map accountPermInfo = (Map) obj;
+                AccountPermissionInfo accountPermissionInfo = accountPermissionInfoRepository.findById(Long.valueOf(accountPermInfo.get("id").toString())).get();
+                accountPermissionInfo.setSystemName(accountPermInfo.get("name").toString());
+                accountPermissionInfo.setOrg(StringUtils.join((List) accountPermInfo.get("value"), ","));
+                accountPermissionInfo.setSystemPermissions(StringUtils.join((List) accountPermInfo.get("perm"), ","));
+            }
         } else {
             account.setCreatedBy(currentUser);
+            for (Object obj : list) {
+                Map accountPermInfo = (Map) obj;
+                AccountPermissionInfo accountPermissionInfo = new AccountPermissionInfo();
+                accountPermissionInfo.setAccount(account);
+                accountPermissionInfo.setSystemName(accountPermInfo.get("name").toString());
+                accountPermissionInfo.setOrg(StringUtils.join((List) accountPermInfo.get("value"), ","));
+                accountPermissionInfo.setSystemPermissions(StringUtils.join((List) accountPermInfo.get("perm"), ","));
+                infoHashSet.add(accountPermissionInfo);
+            }
+            account.setAccountPermissionInfoSet(infoHashSet);
         }
-
         account.setName(map.get("name").toString());
         account.setDept(map.get("dept").toString());
         account.setEmail(map.get("email").toString());
         account.setReasonForApplication(map.get("reason").toString());
         account.setTel(map.get("tel").toString());
         account.setPost(map.get("post").toString());
-        account.setSystem1(map.get("system1").toString());
-        account.setSystem2(map.get("system2").toString());
-        account.setSystem3(map.get("system3").toString());
         account.setStatus("暂存");
-
         account.setUpdatedBy(currentUser);
         account.setOtherPerm(map.get("otherPerm").toString());
         account.setGroup(map.get("group").toString());
         account.setApplicationType(map.get("applicationType").toString());
 
-        account.setSysOrg1(StringUtils.join((List) map.get("sysOrg1"), ","));
-        account.setSysOrg2(StringUtils.join((List) map.get("sysOrg2"), ","));
-        account.setSysOrg3(StringUtils.join((List) map.get("sysOrg3"), ","));
-        account.setSysPerm1(StringUtils.join((List) map.get("sysPerm1"), ","));
-        account.setSysPerm2(StringUtils.join((List) map.get("sysPerm2"), ","));
-        account.setSysPerm3(StringUtils.join((List) map.get("sysPerm3"), ""));
-
+        //System.out.println("account :" + account);
 
         accountRepository.save(account);
 
@@ -206,26 +234,34 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
-    public AccountDetailVo editData(long id) {
+    public AccountDetailVo editData(long id) throws Exception {
 
         Account account = accountRepository.getOne(id);
         AccountDetailVo accountDetailVo = new AccountDetailVo();
         BeanUtils.copyProperties(account, accountDetailVo);
         accountDetailVo.setReason(account.getReasonForApplication());
-        accountDetailVo.setSysOrg1(Arrays.asList(account.getSysOrg1().split(",")));
-        accountDetailVo.setSysPerm1(Arrays.asList(account.getSysPerm1().split(",")));
-        accountDetailVo.setSysPerm1(Arrays.asList(account.getSysPerm1().split(",")));
-        accountDetailVo.setSysOrg2(Arrays.asList(account.getSysOrg2().split(",")));
-        accountDetailVo.setSysPerm2(Arrays.asList(account.getSysPerm2().split(",")));
-        accountDetailVo.setSysOrg3(Arrays.asList(account.getSysOrg3().split(",")));
-        accountDetailVo.setSysPerm3(Arrays.asList(account.getSysPerm3().split(",")));
+        List<Map> systemInfo = new ArrayList<>();
+        Set<AccountPermissionInfo> infoHashSet = account.getAccountPermissionInfoSet();
+        System.out.println(infoHashSet);
+        for (AccountPermissionInfo accountPermissionInfo : infoHashSet) {
+            Map<String, Object> apiMap = new HashMap<>();
+            apiMap.put("id", accountPermissionInfo.getId());
+            apiMap.put("name", accountPermissionInfo.getSystemName());
+            apiMap.put("value", Arrays.asList(accountPermissionInfo.getOrg().split(",")));
+            apiMap.put("perm", Arrays.asList(accountPermissionInfo.getSystemPermissions().split(",")));
+            apiMap.put("org", toOptions(accountPermissionInfo.getOrg(), accountDetailVo.getDept()));
+            systemInfo.add(apiMap);
+        }
+        accountDetailVo.setSystemInfo(systemInfo);
+        System.out.println(accountDetailVo);
         return accountDetailVo;
     }
 
     @Override
     public CommonResponse updateStatus(long id, String status) {
-
-        Account account = accountRepository.getOne(id);
+        System.out.println(id);
+        Account account = getAccountById(id);
+        System.out.println("updateStatus:" + account);
         String currentUser = JWTUtil.getUsername(SecurityUtils.getSubject().getPrincipal().toString());
 
         if (account == null) {
@@ -263,5 +299,29 @@ public class AccountServiceImpl implements AccountService {
         account.setUpdatedBy(currentUser);
         accountRepository.save(account);
         return new CommonResponse("ok");
+    }
+
+    private List toOptions(String org, String dept) {
+        List<String> orgList = new ArrayList<>();
+        if (dept.contains("关务") || dept.contains("东诚")) {
+            System.out.println("账号包含关务");
+            orgList.add("物流");
+            orgList.add("综合");
+            orgList.add("东诚");
+        } else {
+            if (org.isEmpty()) {
+                orgList.add(dept);
+            } else {
+                orgList = Arrays.asList(org.split(","));
+            }
+        }
+        List<Map> list = new ArrayList<>();
+        for (String s : orgList) {
+            HashMap<String, String> hashMap = new HashMap<>();
+            hashMap.put("label", s);
+            hashMap.put("value", s);
+            list.add(hashMap);
+        }
+        return list;
     }
 }

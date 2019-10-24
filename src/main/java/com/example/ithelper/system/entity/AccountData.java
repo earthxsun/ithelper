@@ -106,4 +106,18 @@ public class AccountData {
     public void setWorkGroup(String workGroup) {
         this.workGroup = workGroup;
     }
+
+    @Override
+    public String toString() {
+        return "AccountData{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", content='" + content + '\'' +
+                ", workGroup='" + workGroup + '\'' +
+                ", createdBy='" + createdBy + '\'' +
+                ", createTime=" + createTime +
+                ", updatedBy='" + updatedBy + '\'' +
+                ", updateTime=" + updateTime +
+                '}';
+    }
 }

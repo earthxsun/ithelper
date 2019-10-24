@@ -16,24 +16,6 @@ public class AccountDetailVo {
 
     private String tel;
 
-    private String system1;
-
-    private List<String> sysOrg1;
-
-    private List<String> sysPerm1;
-
-    private String system2;
-
-    private List<String> sysOrg2;
-
-    private List<String> sysPerm2;
-
-    private String system3;
-
-    private List<String> sysOrg3;
-
-    private List<String> sysPerm3;
-
     private String applicationType;
 
     private String reason;
@@ -41,6 +23,8 @@ public class AccountDetailVo {
     private String group;
 
     private String otherPerm;
+
+    private List systemInfo;
 
     public long getId() {
         return id;
@@ -90,78 +74,6 @@ public class AccountDetailVo {
         this.tel = tel;
     }
 
-    public String getSystem1() {
-        return system1;
-    }
-
-    public void setSystem1(String system1) {
-        this.system1 = system1;
-    }
-
-    public List<String> getSysOrg1() {
-        return sysOrg1;
-    }
-
-    public void setSysOrg1(List<String> sysOrg1) {
-        this.sysOrg1 = sysOrg1;
-    }
-
-    public List<String> getSysPerm1() {
-        return sysPerm1;
-    }
-
-    public void setSysPerm1(List<String> sysPerm1) {
-        this.sysPerm1 = sysPerm1;
-    }
-
-    public String getSystem2() {
-        return system2;
-    }
-
-    public void setSystem2(String system2) {
-        this.system2 = system2;
-    }
-
-    public List<String> getSysOrg2() {
-        return sysOrg2;
-    }
-
-    public void setSysOrg2(List<String> sysOrg2) {
-        this.sysOrg2 = sysOrg2;
-    }
-
-    public List<String> getSysPerm2() {
-        return sysPerm2;
-    }
-
-    public void setSysPerm2(List<String> sysPerm2) {
-        this.sysPerm2 = sysPerm2;
-    }
-
-    public String getSystem3() {
-        return system3;
-    }
-
-    public void setSystem3(String system3) {
-        this.system3 = system3;
-    }
-
-    public List<String> getSysOrg3() {
-        return sysOrg3;
-    }
-
-    public void setSysOrg3(List<String> sysOrg3) {
-        this.sysOrg3 = sysOrg3;
-    }
-
-    public List<String> getSysPerm3() {
-        return sysPerm3;
-    }
-
-    public void setSysPerm3(List<String> sysPerm3) {
-        this.sysPerm3 = sysPerm3;
-    }
-
     public String getApplicationType() {
         return applicationType;
     }
@@ -192,5 +104,30 @@ public class AccountDetailVo {
 
     public void setOtherPerm(String otherPerm) {
         this.otherPerm = otherPerm;
+    }
+
+    public List getSystemInfo() {
+        return systemInfo;
+    }
+
+    public void setSystemInfo(List systemInfo) {
+        this.systemInfo = systemInfo;
+    }
+
+    @Override
+    public String toString() {
+        return "AccountDetailVo{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", dept='" + dept + '\'' +
+                ", email='" + email + '\'' +
+                ", post='" + post + '\'' +
+                ", tel='" + tel + '\'' +
+                ", applicationType='" + applicationType + '\'' +
+                ", reason='" + reason + '\'' +
+                ", group='" + group + '\'' +
+                ", otherPerm='" + otherPerm + '\'' +
+                ", systemInfo=" + systemInfo +
+                '}';
     }
 }

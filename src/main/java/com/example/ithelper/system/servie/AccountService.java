@@ -13,9 +13,9 @@ public interface AccountService {
 
     HashMap getAccounts(Map map);
 
-    Account saveData(Map map,String method);
+    Account saveData(Map map,String method) throws Exception;
 
     CommonResponse updateStatus(long id, String status);
 
-    AccountDetailVo editData(long id);
+    AccountDetailVo editData(long id) throws NoSuchMethodException, Exception;
 }

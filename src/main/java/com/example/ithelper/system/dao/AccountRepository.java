@@ -28,4 +28,12 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
     List<Account> findAllByCreateTimeBetween(Date date1,Date date2);
 
     List<Account> findAllByCreateTimeBetween(Date date1,Date date2,Pageable pageable);
+
+    List<Account> findAllByDeptIn(List<String> list);
+
+    List<Account> findAllByDeptIn(List<String> list,Pageable pageable);
+
+    List<Account> findAllByDeptInAndNameContains(List<String> list,String name);
+
+    List<Account> findAllByDeptInAndNameContains(List<String> list,String name,Pageable pageable);
 }

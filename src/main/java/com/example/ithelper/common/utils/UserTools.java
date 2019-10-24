@@ -11,7 +11,9 @@ import org.apache.shiro.crypto.hash.SimpleHash;
 import org.springframework.beans.BeanUtils;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class UserTools {
 
@@ -40,9 +42,22 @@ public class UserTools {
     public static String getCurrentUser() throws CommonException {
         Object principal = SecurityUtils.getSubject().getPrincipal();
         if (principal == null) {
-            throw new CommonException(CommonErrorMsg.USER_NOT_LOGIN.getErrMsg(),CommonErrorMsg.USER_NOT_LOGIN.getErrCode());
+            throw new CommonException(CommonErrorMsg.USER_NOT_LOGIN.getErrMsg(), CommonErrorMsg.USER_NOT_LOGIN.getErrCode());
         }
 
-        return  JWTUtil.getUsername(principal.toString());
+        return JWTUtil.getUsername(principal.toString());
+    }
+
+    public static List getUserOrg(String org) {
+        String[] list = org.split(",");
+        ArrayList<Map> arrayList = new ArrayList<>();
+        for (String s : list) {
+            HashMap<String, String> hashMap = new HashMap<>();
+            hashMap.put("label", s);
+            hashMap.put("value", s);
+            arrayList.add(hashMap);
+        }
+        System.out.println(arrayList);
+        return arrayList;
     }
 }

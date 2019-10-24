@@ -1,5 +1,6 @@
 package com.example.ithelper.system.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.springframework.data.annotation.CreatedBy;
@@ -8,6 +9,8 @@ import org.springframework.data.annotation.LastModifiedBy;
 import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "t_account")
@@ -18,7 +21,7 @@ public class Account {
     private long id;
 
     @NotBlank(message = "名字不能为空")
-    @Column(nullable = false, name = "account_name")
+    @Column(nullable = false, name = "account_user")
     private String name;
 
     @NotBlank(message = "部门不能为空")
@@ -37,33 +40,6 @@ public class Account {
     @Column(nullable = false)
     private String tel;
 
-    @Column(nullable = false)
-    private String system1 = "";
-
-    @Column(nullable = false)
-    private String sysOrg1 = "";
-
-    @Column(nullable = false)
-    private String sysPerm1 = "";
-
-    @Column(nullable = false)
-    private String system2 = "";
-
-    @Column(nullable = false)
-    private String sysOrg2 = "";
-
-    @Column(nullable = false)
-    private String sysPerm2 = "";
-
-    @Column(nullable = false)
-    private String system3 = "";
-
-    @Column(nullable = false)
-    private String sysOrg3 = "";
-
-    @Column(nullable = false)
-    private String sysPerm3 = "";
-
     @NotBlank(message = "申请类型不能为空")
     @Column(nullable = false)
     private String applicationType;
@@ -81,6 +57,10 @@ public class Account {
 
     @Column(nullable = false)
     private String status = "";
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "account",cascade = CascadeType.ALL,fetch = FetchType.EAGER)
+    private Set<AccountPermissionInfo> accountPermissionInfoSet = new HashSet<>();
 
     @Column(nullable = false)
     @CreatedBy
@@ -148,78 +128,6 @@ public class Account {
         this.tel = tel;
     }
 
-    public String getSystem1() {
-        return system1;
-    }
-
-    public void setSystem1(String system1) {
-        this.system1 = system1;
-    }
-
-    public String getSysOrg1() {
-        return sysOrg1;
-    }
-
-    public void setSysOrg1(String sysOrg1) {
-        this.sysOrg1 = sysOrg1;
-    }
-
-    public String getSysPerm1() {
-        return sysPerm1;
-    }
-
-    public void setSysPerm1(String sysPerm1) {
-        this.sysPerm1 = sysPerm1;
-    }
-
-    public String getSystem2() {
-        return system2;
-    }
-
-    public void setSystem2(String system2) {
-        this.system2 = system2;
-    }
-
-    public String getSysOrg2() {
-        return sysOrg2;
-    }
-
-    public void setSysOrg2(String sysOrg2) {
-        this.sysOrg2 = sysOrg2;
-    }
-
-    public String getSysPerm2() {
-        return sysPerm2;
-    }
-
-    public void setSysPerm2(String sysPerm2) {
-        this.sysPerm2 = sysPerm2;
-    }
-
-    public String getSystem3() {
-        return system3;
-    }
-
-    public void setSystem3(String system3) {
-        this.system3 = system3;
-    }
-
-    public String getSysOrg3() {
-        return sysOrg3;
-    }
-
-    public void setSysOrg3(String sysOrg3) {
-        this.sysOrg3 = sysOrg3;
-    }
-
-    public String getSysPerm3() {
-        return sysPerm3;
-    }
-
-    public void setSysPerm3(String sysPerm3) {
-        this.sysPerm3 = sysPerm3;
-    }
-
     public String getApplicationType() {
         return applicationType;
     }
@@ -244,12 +152,28 @@ public class Account {
         this.group = group;
     }
 
+    public String getOtherPerm() {
+        return otherPerm;
+    }
+
+    public void setOtherPerm(String otherPerm) {
+        this.otherPerm = otherPerm;
+    }
+
     public String getStatus() {
         return status;
     }
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public Set<AccountPermissionInfo> getAccountPermissionInfoSet() {
+        return accountPermissionInfoSet;
+    }
+
+    public void setAccountPermissionInfoSet(Set<AccountPermissionInfo> accountPermissionInfoSet) {
+        this.accountPermissionInfoSet = accountPermissionInfoSet;
     }
 
     public String getCreatedBy() {
@@ -284,11 +208,25 @@ public class Account {
         this.updateTime = updateTime;
     }
 
-    public String getOtherPerm() {
-        return otherPerm;
-    }
-
-    public void setOtherPerm(String otherPerm) {
-        this.otherPerm = otherPerm;
+    @Override
+    public String toString() {
+        return "Account{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", dept='" + dept + '\'' +
+                ", email='" + email + '\'' +
+                ", post='" + post + '\'' +
+                ", tel='" + tel + '\'' +
+                ", applicationType='" + applicationType + '\'' +
+                ", reasonForApplication='" + reasonForApplication + '\'' +
+                ", group='" + group + '\'' +
+                ", otherPerm='" + otherPerm + '\'' +
+                ", status='" + status + '\'' +
+                ", accountPermissionInfoSet=" + accountPermissionInfoSet +
+                ", createdBy='" + createdBy + '\'' +
+                ", createTime=" + createTime +
+                ", updatedBy='" + updatedBy + '\'' +
+                ", updateTime=" + updateTime +
+                '}';
     }
 }
